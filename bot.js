@@ -3,23 +3,22 @@ var irc = require('irc'),
     _ = require('lodash'),
     fs = require('fs'),
     moment = require('moment'),
+    argv = require('yargs').argv,
     bot;
 
-function Bot(birthdaysFile) {
+function Bot(opts) {
     var today = moment(),
         mainloop,
         interval,
         setTopic,
-        nick = 'NielsHenrik',
-        channel = '#agnurk',
         client,
-        birthdays = readBirthdays(birthdaysFile);
+        birthdays = readBirthdays();
 
     client = new irc.Client(
         'irc.freenode.net',
-        nick,
+        opts.nick,
         {
-            channels: [channel],
+            channels: [opts.channel],
             debug: true
         }
     );
@@ -73,16 +72,29 @@ function Bot(birthdaysFile) {
         }
     });
 
+    if (opts.password !== undefined) {
+        console.log('adding registered listener');
+        client.addListener('notice', function (nick, to, text, message) {
+            console.log(nick + ', ' + to + ', ' + text);
+            if (nick === 'NickServ'
+                && to === client.nick
+                && text.indexOf('This nickname is registered') === 0)
+            {
+                client.say('NickServ', 'identify ' + opts.password);
+            }
+        });
+    }
+
     function help() {
-        client.say(channel, 'Gyldige kommandoar er:' + validArgs());
+        client.say(opts.channel, 'Gyldige kommandoar er:' + validArgs());
     }
 
     function handleError(message) {
-        client.say(channel, 'Eg forstår ikkje "' + message + '", gyldige kommandoar er:' + validArgs());
+        client.say(opts.channel, 'Eg forstår ikkje "' + message + '", gyldige kommandoar er:' + validArgs());
     }
 
-    function readBirthdays(birthdaysFile) {
-        return JSON.parse(fs.readFileSync(birthdaysFile));
+    function readBirthdays() {
+        return JSON.parse(fs.readFileSync(opts.birthdaysFile));
     }
 
     function removeBirthday(from, indexToRemove) {
@@ -95,7 +107,7 @@ function Bot(birthdaysFile) {
                 }
                 return birthday;
             }));
-            fs.writeFile(birthdaysFile, JSON.stringify(birthdays));
+            fs.writeFile(opts.birthdaysFile, JSON.stringify(birthdays));
             if (removedDate !== undefined && removedDate === today.format('YYYY-MM-DD')) {
                 setTopic();
             }
@@ -109,7 +121,7 @@ function Bot(birthdaysFile) {
                 name: name,
                 date: date
             });
-            fs.writeFile(birthdaysFile, JSON.stringify(birthdays));
+            fs.writeFile(opts.birthdaysFile, JSON.stringify(birthdays));
             if (date === today.format('YYYY-MM-DD')) {
                 setTopic();
             }
@@ -123,18 +135,18 @@ function Bot(birthdaysFile) {
             if (n !== undefined && n[from].indexOf('@') !== -1) {
                 callback();
             } else {
-                client.say(channel, from + ': du har ikkje rettighetar til denne operasjonen');
+                client.say(opts.channel, from + ': du har ikkje rettighetar til denne operasjonen');
             }
-            client.removeListener('names' + channel, nameCallback);
+            client.removeListener('names' + opts.channel, nameCallback);
         };
-        client.addListener('names' + channel, nameCallback);
-        client.send('NAMES', channel);
+        client.addListener('names' + opts.channel, nameCallback);
+        client.send('NAMES', opts.channel);
     }
 
     function listBirthdays() {
-        client.say(channel, '--  Registrerte bursdagar: --');
+        client.say(opts.channel, '--  Registrerte bursdagar: --');
         _.each(birthdays, function (birthday, index) {
-            client.say(channel, ' ' + ' [' + (index + 1) + '] ' + birthday.name + ': ' + birthday.date);
+            client.say(opts.channel, ' ' + ' [' + (index + 1) + '] ' + birthday.name + ': ' + birthday.date);
         });
     }
 
@@ -156,16 +168,16 @@ function Bot(birthdaysFile) {
             }
             client.send(
                 'TOPIC',
-                channel,
+                opts.channel,
                 'I dag: ' + holidays[index - 1]);
         });
     }
 
     function listHolidays(day) {
         fetcher.fetchHolidays(day, function (holidays) {
-            client.say(channel, '-- ' + day.format('YYYY-MM-DD') + ': --');
+            client.say(opts.channel, '-- ' + day.format('YYYY-MM-DD') + ': --');
             _.each(holidays, function (holiday, index) {
-                client.say(channel, ' [' + (index + 1) + '] ' + holiday);
+                client.say(opts.channel, ' [' + (index + 1) + '] ' + holiday);
             });
         });
     }
@@ -174,7 +186,7 @@ function Bot(birthdaysFile) {
         var all = birthdays.length > 1 ? birthdays.slice(0, birthdays.length - 1).join(', ') + ' og ' + birthdays[birthdays.length - 1] : birthdays[0];
         client.send(
             'TOPIC',
-            channel,
+            opts.channel,
             'Topic gratulerer ' + all + ' med dagen!');
     }
 
@@ -218,6 +230,11 @@ function Bot(birthdaysFile) {
     };
 }
 
-bot = new Bot('birthdays.json');
+bot = new Bot({
+    birthdaysFile: argv.birthdaysfile,
+    nick: argv.nick,
+    channel: argv.channel,
+    password: argv.password
+});
 
 bot.mainloop();
