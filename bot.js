@@ -67,7 +67,11 @@ function Bot(opts) {
                 help();
                 break;
             default:
-                handleError(message);
+                if (opts.helpful) {
+                    handleError(message);
+                } else {
+                    pointlessStatement(from, message);
+                }
             }
         }
     });
@@ -86,11 +90,39 @@ function Bot(opts) {
     }
 
     function help() {
-        client.say(opts.channel, 'Gyldige kommandoar er:' + validArgs());
+        client.say(opts.channel, 'Gyldige kommandoar er:\n' + validArgs());
     }
 
     function handleError(message) {
-        client.say(opts.channel, 'Eg forstår ikkje "' + message + '", gyldige kommandoar er:' + validArgs());
+        client.say(opts.channel, 'Eg forstår ikkje "' + message + '", gyldige kommandoar er:\n' + validArgs());
+    }
+
+    function pointlessStatement(from, message) {
+        client.say(opts.channel, from + ': ' + randomStuff(message));
+    }
+
+    function randomStuff(message) {
+        var weekdays =
+                [
+                    'måndag',
+                    'tysdag',
+                    'onsdag',
+                    'torsdag',
+                    'fredag',
+                    'laurdag',
+                    'søndag'
+                ],
+            stuff =
+                [
+                    'Kva meinar du med «' + message + '»?',
+                    'Det tykjer ikkje eg!',
+                    'Altså, ikkje på ein ' + weekdays[today.weekday()] + '!',
+                    'Det er ein god tanke!',
+                    'Kvifor ikkje?',
+                    'Your mother is a hamster and your father smells of elderberries!',
+                    'OK!'
+                ];
+        return stuff[Math.floor(Math.random() * stuff.length)];
     }
 
     function readBirthdays() {
@@ -151,7 +183,7 @@ function Bot(opts) {
     }
 
     function validArgs() {
-        return '\n' + [
+        return [
             ' hjelp -- Denne teksta',
             ' heilagdag [n] -- Vel kva for heilagdag som skal visast',
             ' heilagdagar [datestring] -- Vis ei liste over heilagdager i dag eller for valt dato',
