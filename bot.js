@@ -6,7 +6,8 @@ bot = new Bot({
     birthdaysFile: argv.birthdaysfile,
     nick: argv.nick,
     channel: argv.channel,
-    password: argv.password
+    password: argv.password,
+    autojoin: argv.autojoin
 });
 
 bot.mainloop();
