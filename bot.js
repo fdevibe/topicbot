@@ -7,7 +7,8 @@ bot = new Bot({
     nick: argv.nick,
     channel: argv.channel,
     password: argv.password,
-    autojoin: argv.autojoin
+    autojoin: argv.autojoin,
+    autoset: argv.autoset
 });
 
 bot.mainloop();
