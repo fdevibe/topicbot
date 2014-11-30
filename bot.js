@@ -1,12 +1,20 @@
 var Bot = require('./lib/bot').Bot,
     argv = require('yargs').argv,
-    bot;
+    fs = require('fs'),
+    bot,
+    password;
+
+if (argv.pwfile) {
+    password = fs.readFileSync(argv.pwfile).toString().trim();
+} else {
+    password = argv.password;
+}
 
 bot = new Bot({
     birthdaysFile: argv.birthdaysfile,
     nick: argv.nick,
     channel: argv.channel,
-    password: argv.password,
+    password: password,
     autojoin: argv.autojoin,
     autoset: argv.autoset
 });
