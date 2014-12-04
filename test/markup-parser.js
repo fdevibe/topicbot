@@ -14,15 +14,21 @@ describe('markup-parser', function () {
             [
                 {
                     header: 'bar',
-                    body: 'bar content\n'
+                    body: [
+                        'bar content'
+                    ]
                 },
                 {
                     header: 'baz',
-                    body: 'baz content\n'
+                    body: [
+                        'baz content'
+                    ]
                 },
                 {
                     header: 'zoot',
-                    body: '\nzoot content\n\n'
+                    body: [
+                        'zoot content'
+                    ]
                 }
             ],
             wm.sections
@@ -35,7 +41,25 @@ describe('markup-parser', function () {
             [
                 {
                     header: 'bar',
-                    body: 'bar content\n'
+                    body: [
+                        'bar content'
+                    ]
+                }
+            ],
+            wm.sections
+        );
+    });
+
+    it('splits paragraphs', function () {
+        var wm = new parser.WikiMarkup('foo\n==bar==\nfirst par\n\nsecond par\nrest of second par');
+        assert.deepEqual(
+            [
+                {
+                    header: 'bar',
+                    body: [
+                        'first par',
+                        'second par rest of second par'
+                    ]
                 }
             ],
             wm.sections
