@@ -65,4 +65,26 @@ describe('markup-parser', function () {
             wm.sections
         );
     });
+
+    it('parses lists', function () {
+        var wm = new parser.WikiMarkup('foo\n==bar==\nbefore list\n*first\n*and second\nnot part of list');
+        assert.deepEqual(
+            [
+                {
+                    header: 'bar',
+                    body: [
+                        'before list',
+                        {
+                            li: [
+                                'first',
+                                'and second'
+                            ]
+                        },
+                        'not part of list'
+                    ]
+                }
+            ],
+            wm.sections
+        );
+    });
 });
