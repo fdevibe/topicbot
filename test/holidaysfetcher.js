@@ -49,7 +49,7 @@ describe('holidaysfetcher', function () {
         assert(callbackCalled);
     });
 
-    it('ignores stuff before first item', function () {
+    it('ignores file links before first item', function () {
         stub = sinon.stub(nodemw.prototype, 'getArticle')
                 .yields('== Merkedager ==\n[[file:Red Ribbon.svg|right|30 px]]\n* [[foo]]\n\n'),
             callbackCalled = false;
